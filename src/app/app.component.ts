@@ -6,4 +6,10 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+
+  featureSelected = 'recipe';
+
+  onNavigate(selection: string) {
+    this.featureSelected = selection;
+  }
 }
