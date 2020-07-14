@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { AuthService } from './auth.service';
+import { AuthService, AuthResponseData } from './auth.service';
+import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-auth', 
@@ -12,7 +14,7 @@ export class AuthComponent {
     isLoading = false;
     error: string = null;
 
-    constructor(private authService: AuthService) { }
+    constructor(private authService: AuthService, private router: Router) { }
 
     onSwitchModes() {
         // Reverses the value of the mode
@@ -27,24 +29,30 @@ export class AuthComponent {
         const email = form.value.email;
         const password = form.value.password;
 
+        let authObservable: Observable<AuthResponseData>;
+
         this.isLoading = true;
 
         if (this.inLoginMode) {
-            // ...
+            authObservable = this.authService.login(email, password);
         } else {
-            // Logic for signing up
-            this.authService.signup(email, password).subscribe(
-                responseData => {
-                    console.log(responseData);
-                    this.isLoading = false;
-                }, 
-                error => {
-                    console.log(error);
-                    this.error = 'An error occurred!';
-                    this.isLoading = false;
-                }
-            );
+            authObservable = this.authService.signup(email, password);
         }
+
+        authObservable.subscribe(
+            responseData => {
+                console.log(responseData);
+                this.isLoading = false;
+                // Navigating to recipes tab after successful authentication
+                this.router.navigate(['/recipes']);
+            }, 
+            errorMessage => {
+                console.log(errorMessage);
+                this.error = errorMessage;
+                this.isLoading = false;
+            }
+        );
+
         form.reset();
     }
 }
