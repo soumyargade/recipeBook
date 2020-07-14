@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, tap } from 'rxjs/operators';
 import { throwError, Subject, BehaviorSubject } from 'rxjs';
 import { User } from './user.model';
+import { Router } from '@angular/router';
 
 // Defined in the Firebase Auth REST API documentation
 export interface AuthResponseData {
@@ -22,7 +23,7 @@ export class AuthService {
     // Emit whenever we login or logout
     user = new BehaviorSubject<User>(null);
 
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient, private router: Router) { }
     
     // Documentation on Firebase Auth REST API signup page
     signup(email: string, password: string) {
@@ -50,6 +51,13 @@ export class AuthService {
         ).pipe(catchError(this.handleError), tap(responseData => {
             this.handleAuth(responseData.email, responseData.localId, responseData.idToken, +responseData.expiresIn);
         }));
+    }
+
+    logout() {
+        // Setting the user back to null
+        this.user.next(null);
+        // Redirecting to authentication
+        this.router.navigate(['/auth']);
     }
 
     private handleAuth(email: string, userId: string, token: string, expiresIn: number) {
