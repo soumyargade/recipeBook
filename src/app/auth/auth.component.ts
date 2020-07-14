@@ -1,20 +1,30 @@
-import { Component } from '@angular/core';
+import { Component, ComponentFactoryResolver, ViewChild, OnDestroy } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { AuthService, AuthResponseData } from './auth.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
+
+import { AuthService, AuthResponseData } from './auth.service';
+import { AlertComponent } from '../shared/alert/alert.component';
+import { PlaceholderDirective } from '../shared/placeholder/placeholder.directive';
 
 @Component({
     selector: 'app-auth', 
     templateUrl: './auth.component.html'
 })
-export class AuthComponent {
+export class AuthComponent implements OnDestroy {
 
     inLoginMode = true;
     isLoading = false;
     error: string = null;
+    // Will get the first instance of the directive from the template
+    @ViewChild(PlaceholderDirective, {static: false}) alertHost: PlaceholderDirective;
 
-    constructor(private authService: AuthService, private router: Router) { }
+    private closeSubscription: Subscription;
+
+    constructor(
+        private authService: AuthService, 
+        private router: Router, 
+        private componentFactoryResolver: ComponentFactoryResolver) { }
 
     onSwitchModes() {
         // Reverses the value of the mode
@@ -49,10 +59,40 @@ export class AuthComponent {
             errorMessage => {
                 console.log(errorMessage);
                 this.error = errorMessage;
+                this.showErrorAlert(errorMessage);
                 this.isLoading = false;
             }
         );
-
         form.reset();
+    }
+
+    onHandleError() {
+        // Will close the alert
+        this.error = null;
+    }
+
+    ngOnDestroy() {
+        if (this.closeSubscription) {
+            this.closeSubscription.unsubscribe();
+        }
+    }
+
+    private showErrorAlert(message: string) {
+        // Incorrect way to create component
+            // const alertCmp = new AlertComponent();
+        const alertCmpFactory = this.componentFactoryResolver.resolveComponentFactory(AlertComponent);
+        const hostViewContainerRef = this.alertHost.viewContainerRef;
+        // Clearing anything that was rendered in the past
+        hostViewContainerRef.clear();
+        // Creating a new component in that place
+        const componentRef = hostViewContainerRef.createComponent(alertCmpFactory);
+
+        componentRef.instance.message = message;
+        this.closeSubscription = componentRef.instance.close.subscribe(
+            () => {
+                this.closeSubscription.unsubscribe();
+                hostViewContainerRef.clear();
+            }
+        );
     }
 }
