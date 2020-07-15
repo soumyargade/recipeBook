@@ -4,6 +4,7 @@ import { catchError, tap } from 'rxjs/operators';
 import { throwError, Subject, BehaviorSubject } from 'rxjs';
 import { User } from './user.model';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 // Defined in the Firebase Auth REST API documentation
 export interface AuthResponseData {
@@ -29,7 +30,7 @@ export class AuthService {
     // Documentation on Firebase Auth REST API signup page
     signup(email: string, password: string) {
         return this.http.post<AuthResponseData>(
-            'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBHT7q_iICL-5RV2y-FE-IchvlMXkhlvaE', 
+            'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + environment.firebaseAPIKey, 
             {
                 email: email, 
                 password: password, 
@@ -43,7 +44,7 @@ export class AuthService {
     // Documentation on Firebase Auth REST API signup page
     login(email: string, password: string) {
         return this.http.post<AuthResponseData>(
-            'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBHT7q_iICL-5RV2y-FE-IchvlMXkhlvaE', 
+            'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + environment.firebaseAPIKey, 
             {
                 email: email, 
                 password: password, 
